@@ -48,7 +48,7 @@ def handle_all(message):
         time.sleep(1)
         bot.edit_message_text("Done! Downloading the file...",message.chat.id, message.message_id+1)
 
-        if fileSize>=8388608:
+        if fileSize>=8000000:
             bot.edit_message_text("File size is too big. Aborted ❌",message.chat.id, message.message_id+1)
         else:
             download_file(file_path,fileName)
