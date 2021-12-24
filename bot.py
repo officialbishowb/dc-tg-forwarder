@@ -49,7 +49,7 @@ def handle_all(message):
                 bot.reply_to(message,"Done! File forwarded to Discord ✅")
                 del_file(fileName)
             else:
-                  bot.reply_to(message,"Error! File not forwarded to Discord ❌\nError: "+str(sendFile_res[0]))
+                  bot.reply_to(message,"Error! File not forwarded to Discord ❌")
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
@@ -147,13 +147,11 @@ webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
 # send the image
 def send_file(filename):
     time.sleep(4)
-    with open(f"./{filename}", "rb") as f:
+    with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
-        response = webhook.execute(remove_embeds=True, remove_files=True)
-    if response.status_code == 200: 
-        return True
-    return response
-
+    # send the webhook
+    response = webhook.execute()    
+    return response.status_code==200
 
 bot.polling() # start the telegram bot
 
