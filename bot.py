@@ -153,11 +153,12 @@ def download_file(file_path,filename):
 ############################################# - [DISCORD BOT (WEBHOOK) - PART] - #############################################
 
 
-webhook_url=os.getenv("webhook_url") #your channel webhook url
+webhook_url_1=os.getenv("webhook_url") #your channel webhook url
+webhook_url_2=os.getenv("webhook_url_2") #your channel webhook url
 
 # send the file
 def send_file(filename):
-    webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
+    webhook = DiscordWebhook(url=webhook_url_1, username="LearnIT Forward Bot")
     time.sleep(4)
     with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
@@ -167,7 +168,7 @@ def send_file(filename):
 
 #send the text
 def send_text(text):
-    webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot", rate_limit_retry=True,
+    webhook = DiscordWebhook(url=webhook_url_2, username="LearnIT Forward Bot", rate_limit_retry=True,
                             content=text)
     response = webhook.execute()
     return response.status_code==200
