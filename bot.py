@@ -12,8 +12,8 @@ from discord_webhook import DiscordWebhook
 load_dotenv()
 
 # Some declaration
-bot_token=os.getenv('telegram_bot_token')
-verified_userid=os.getenv('user_with_access')
+bot_token=os.getenv('telegram_bot_token') # your bot token
+verified_userid=os.getenv('user_with_access') # list of user id who can use the bot ([id1, id2, id3])
 
 ## Bot initialization
 bot = telebot.TeleBot(bot_token, parse_mode="HTML")
@@ -168,7 +168,7 @@ def download_file(file_path,filename):
 
 
 ############################################# - [DISCORD BOT (WEBHOOK) - PART] - #############################################
-webhook_url=os.getenv("webhook_url")
+webhook_url=os.getenv("webhook_url") #your channle webhook url
 webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
 
 # send the image
