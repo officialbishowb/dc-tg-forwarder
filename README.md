@@ -3,10 +3,6 @@
 
 ### **How this bot works**
 - First, only check for valid content type (video, photo, document)
-- Then create a JSON file with the following information
-   - filename
-   - file_id
-   - file_size
 - Then get the file path using the file id
 - Before downloading the file, check the file size (if it is> 8MB)
 - If it is less than 8MB, download the file from the file path, otherwise abort
