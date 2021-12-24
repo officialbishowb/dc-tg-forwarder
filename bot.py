@@ -35,34 +35,22 @@ def handle_all(message):
     '''
     if str(message.from_user.id) in verified_userid:
         content=message.content_type
-        bot.reply_to(message,f"Content type is valid. Creating a file with the info..")
-
         fileId=getFileId(message,content)
         fileSize=getFileSize(message,content)   
         fileName=getFileName(message,content)
-
         create_userid_contentfile(message.from_user.id,fileName,fileId,fileSize)
-        bot.edit_message_text("Bot set to sleep for 5 seconds...",message.chat.id, message.message_id+1)
-        time.sleep(5)
-        bot.edit_message_text("Done! Getting the file path...",message.chat.id, message.message_id+1)
         file_path=get_file_path(fileId)
-        time.sleep(1)
-        bot.edit_message_text("Done! Downloading the file...",message.chat.id, message.message_id+1)
 
         if fileSize>=8000000:
-            bot.edit_message_text("File size is too big. Aborted ❌",message.chat.id, message.message_id+1)
+            bot.reply_to(message,"File size is too big. Aborted ❌")
         else:
             download_file(file_path,fileName)
-            time.sleep(1)
-            bot.edit_message_text("Done! Forwarding it to Discord bot.. yeeet",message.chat.id, message.message_id+1)
-            bot.edit_message_text("Done! Forwarded ✅",message.chat.id, message.message_id+1)
-            time.sleep(1)
             if send_file(fileName):
-                bot.edit_message_text("Done! File forwarded to Discord ✅",message.chat.id, message.message_id+1)
+                bot.reply_to(message,"Done! File forwarded to Discord ✅")
                 del_file(fileName)
                 del_file(f"{message.from_user.id}_content.json")
             else:
-                bot.edit_message_text("Error! File not forwarded to Discord ❌",message.chat.id, message.message_id+1)
+                  bot.reply_to(message,"Error! File not forwarded to Discord ❌")
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
