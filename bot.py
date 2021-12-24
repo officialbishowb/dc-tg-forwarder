@@ -53,6 +53,18 @@ def handle_all(message):
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
+@bot.message_handler(content_types=["text"])
+def handle_all(message):
+    if str(message.from_user.id) in verified_userid:
+        if send_text(message.text):
+            bot.reply_to(message,"Done! Text forwarded to Discord ✅")
+        else:
+            bot.reply_to(message,"Error! Text not forwarded to Discord ❌")
+    else:
+        bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
+
+
+
 
 
 def del_file(file):
@@ -142,15 +154,22 @@ def download_file(file_path,filename):
 
 
 webhook_url=os.getenv("webhook_url") #your channel webhook url
-webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
 
-# send the image
+# send the file
 def send_file(filename):
+    webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
     time.sleep(4)
     with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
     # send the webhook
     response = webhook.execute(remove_embeds=True, remove_files=True)    
+    return response.status_code==200
+
+#send the text
+def send_text(text):
+    webhook = DiscordWebhook(url=webhook_url, rate_limit_retry=True,
+                            content=text)
+    response = webhook.execute()
     return response.status_code==200
 
 bot.polling() # start the telegram bot

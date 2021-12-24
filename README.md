@@ -2,7 +2,7 @@
 ## Bot to forward telegram document, video or photos to discord server channel
 
 ### **How this bot works**
-- First, only check for valid content type (video, photo, document)
+- First, only check for valid content type (video, photo, document or text)
 - Then get the file path using the file id
 - Before downloading the file, check the file size (if it is> 8MB)
 - If it is less than 8MB, download the file from the file path, otherwise abort
