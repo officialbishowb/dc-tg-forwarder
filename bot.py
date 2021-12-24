@@ -45,11 +45,12 @@ def handle_all(message):
         else:
             download_file(file_path,fileName)
             time.sleep(2)
-            if send_file(fileName):
+            sendFile_res=send_file(fileName)
+            if sendFile_res:
                 bot.reply_to(message,"Done! File forwarded to Discord ✅")
                 del_file(fileName)
             else:
-                  bot.reply_to(message,"Error! File not forwarded to Discord ❌")
+                  bot.reply_to(message,"Error! File not forwarded to Discord ❌\nError: "+sendFile_res)
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
@@ -147,7 +148,9 @@ def send_file(filename):
     with open(f"./{filename}", "rb") as f:
         webhook.add_file(file=f.read(), filename=filename)
     response = webhook.execute()
-    return response.status_code == 200
+    if response.status_code == 200: 
+        return True
+    return response
 
 
 bot.polling() # start the telegram bot
