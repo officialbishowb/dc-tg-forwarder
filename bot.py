@@ -162,12 +162,12 @@ def send_file(filename):
     with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
     # send the webhook
-    response = webhook.execute(remove_embeds=True, remove_files=True)    
+    response = webhook.execute(remove_embeds=True, remove_files=True)
     return response.status_code==200
 
 #send the text
 def send_text(text):
-    webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot" rate_limit_retry=True,
+    webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot", rate_limit_retry=True,
                             content=text)
     response = webhook.execute()
     return response.status_code==200
