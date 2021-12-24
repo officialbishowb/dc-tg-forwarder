@@ -35,41 +35,24 @@ def handle_all(message):
     '''
     if str(message.from_user.id) in verified_userid:
         content=message.content_type
+        time.sleep(5)
         fileId=getFileId(message,content)
         fileSize=getFileSize(message,content)   
         fileName=getFileName(message,content)
-        create_userid_contentfile(message.from_user.id,fileName,fileId,fileSize)
         file_path=get_file_path(fileId)
-
         if fileSize>=8000000:
             bot.reply_to(message,"File size is too big. Aborted ❌")
         else:
             download_file(file_path,fileName)
+            time.sleep(2)
             if send_file(fileName):
                 bot.reply_to(message,"Done! File forwarded to Discord ✅")
                 del_file(fileName)
-                del_file(f"{message.from_user.id}_content.json")
             else:
                   bot.reply_to(message,"Error! File not forwarded to Discord ❌")
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
-
-def create_userid_contentfile(userid,*args):
-    '''
-    Create a json file with parameter userid
-    :param userid: The user id to create a json file - {userid}_content.json
-    :param *args: content_type, file_name, files_id, files_size and forwarded_from parameters
-    '''
-    file=f"{userid}_content.json"
-    del_file(file)
-    content={
-        "file_name":args[0],
-        "file_id":args[1],
-        "file_size":args[2]
-    }
-    with open(file,'a') as f:
-        json.dump(content,f)
 
 
 def del_file(file):
