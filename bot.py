@@ -35,7 +35,6 @@ def handle_all(message):
     '''
     if str(message.from_user.id) in verified_userid:
         content=message.content_type
-        time.sleep(5)
         fileId=getFileId(message,content)
         fileSize=getFileSize(message,content)   
         fileName=getFileName(message,content)
@@ -50,7 +49,7 @@ def handle_all(message):
                 bot.reply_to(message,"Done! File forwarded to Discord ✅")
                 del_file(fileName)
             else:
-                  bot.reply_to(message,"Error! File not forwarded to Discord ❌\nError: "+str(sendFile_res))
+                  bot.reply_to(message,"Error! File not forwarded to Discord ❌\nError: "+str(sendFile_res[0]))
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
@@ -140,14 +139,17 @@ def download_file(file_path,filename):
 
 
 ############################################# - [DISCORD BOT (WEBHOOK) - PART] - #############################################
-webhook_url=os.getenv("webhook_url") #your channle webhook url
+
+
+webhook_url=os.getenv("webhook_url") #your channel webhook url
 webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
 
 # send the image
 def send_file(filename):
+    time.sleep(4)
     with open(f"./{filename}", "rb") as f:
         webhook.add_file(file=f.read(), filename=filename)
-    response = webhook.execute()
+        response = webhook.execute(remove_embeds=True, remove_files=True)
     if response.status_code == 200: 
         return True
     return response
