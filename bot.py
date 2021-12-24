@@ -150,7 +150,7 @@ def send_file(filename):
     with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
     # send the webhook
-    response = webhook.execute()    
+    response = webhook.execute(remove_embeds=True, remove_files=True)    
     return response.status_code==200
 
 bot.polling() # start the telegram bot
