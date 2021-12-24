@@ -44,12 +44,17 @@ def handle_all(message):
         else:
             download_file(file_path,fileName)
             time.sleep(2)
-            sendFile_res=send_file(fileName)
+            ## if the file end with "rar","zip","txt" then send to second webhook channel else to the first webhook(mostly memes or pictures) 
+            if fileName.split(".")[1] in ["rar","zip","txt"]:
+                sendFile_res=send_file_2(fileName)
+            else:
+                sendFile_res=send_file_1(fileName)
+
             if sendFile_res:
-                bot.reply_to(message,"Done! File forwarded to Discord ✅")
+                bot.reply_to(message,"Done! Forwarded to Discord ✅")
                 del_file(fileName)
             else:
-                  bot.reply_to(message,"Error! File not forwarded to Discord ❌")
+                  bot.reply_to(message,"Error! Not Forwarded to Discord ❌")
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
@@ -156,8 +161,8 @@ def download_file(file_path,filename):
 webhook_url_1=os.getenv("webhook_url") #your channel webhook url
 webhook_url_2=os.getenv("webhook_url_2") #your channel webhook url
 
-# send the file
-def send_file(filename):
+# send the file to first webhook
+def send_file_1(filename):
     webhook = DiscordWebhook(url=webhook_url_1, username="LearnIT Forward Bot")
     time.sleep(4)
     with open(filename, 'rb') as f:
@@ -166,11 +171,21 @@ def send_file(filename):
     response = webhook.execute(remove_embeds=True, remove_files=True)
     return response.status_code==200
 
-#send the text
+#send the text to second webhook
 def send_text(text):
     webhook = DiscordWebhook(url=webhook_url_2, username="LearnIT Forward Bot", rate_limit_retry=True,
                             content=text)
     response = webhook.execute()
+    return response.status_code==200
+
+# send the file to second webhook
+def send_file_2(filename):
+    webhook = DiscordWebhook(url=webhook_url_2, username="LearnIT Forward Bot")
+    time.sleep(4)
+    with open(filename, 'rb') as f:
+        webhook.add_file(file=f.read(), filename=filename)
+    # send the webhook
+    response = webhook.execute(remove_embeds=True, remove_files=True)
     return response.status_code==200
 
 bot.polling() # start the telegram bot
