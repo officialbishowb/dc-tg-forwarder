@@ -1,7 +1,6 @@
 
 ############################################# - [TELEGRAM BOT - PART] - #############################################
 
-import asyncio
 import telebot
 import os
 from dotenv import load_dotenv
@@ -9,6 +8,7 @@ import random, string
 import json
 import time
 import requests
+from discord_webhook import DiscordWebhook
 load_dotenv()
 
 # Some declaration
@@ -41,8 +41,9 @@ def handle_all(message):
         fileSize=getFileSize(message,content)   
         fileName=getFileName(message,content)
 
-        create_userid_contentfile(message.from_user.id,fileName,fileId,fileSize,message.from_user.username)
-        time.sleep(1)
+        create_userid_contentfile(message.from_user.id,fileName,fileId,fileSize)
+        bot.edit_message_text("Bot set to sleep for 5 seconds...",message.chat.id, message.message_id+1)
+        time.sleep(5)
         bot.edit_message_text("Done! Getting the file path...",message.chat.id, message.message_id+1)
         file_path=get_file_path(fileId)
         time.sleep(1)
@@ -55,7 +56,13 @@ def handle_all(message):
             time.sleep(1)
             bot.edit_message_text("Done! Forwarding it to Discord bot.. yeeet",message.chat.id, message.message_id+1)
             bot.edit_message_text("Done! Forwarded ✅",message.chat.id, message.message_id+1)
-            # the dc_bot function should be called here
+            time.sleep(1)
+            if send_file(fileName):
+                bot.edit_message_text("Done! File forwarded to Discord ✅",message.chat.id, message.message_id+1)
+                del_file(fileName)
+                del_file(f"{message.from_user.id}_content.json")
+            else:
+                bot.edit_message_text("Error! File not forwarded to Discord ❌",message.chat.id, message.message_id+1)
     else:
         bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
 
@@ -71,8 +78,7 @@ def create_userid_contentfile(userid,*args):
     content={
         "file_name":args[0],
         "file_id":args[1],
-        "file_size":args[2],
-        "forwarded_from":args[3]
+        "file_size":args[2]
     }
     with open(file,'a') as f:
         json.dump(content,f)
@@ -160,7 +166,20 @@ def download_file(file_path,filename):
         f.write(req.content)
 
 
-bot.polling() # start the bot
+
+############################################# - [DISCORD BOT (WEBHOOK) - PART] - #############################################
+webhook_url=os.getenv("webhook_url")
+webhook = DiscordWebhook(url=webhook_url, username="LearnIT Forward Bot")
+
+# send the image
+def send_file(filename):
+    with open(f"./{filename}", "rb") as f:
+        webhook.add_file(file=f.read(), filename=filename)
+    response = webhook.execute()
+    return response.status_code == 200
+
+
+bot.polling() # start the telegram bot
 
 
 

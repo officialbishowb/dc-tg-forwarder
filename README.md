@@ -1,4 +1,15 @@
-## Bot to forward telegram document, video or photos to discord channel
+# Telegram to Discord Forwarder
+## Bot to forward telegram document, video or photos to discord server channel
 
-### This bot is not finished yet.. The discord part is on progress
-### Any one good at discord bot kindly dm me [here](https://t.me/officialbishowb)
+### **How this bot works**
+- First, only check for valid content type (video, photo, document)
+- Then create a JSON file with the following information
+   - filename
+   - file_id
+   - file_size
+- Then get the file path using the file id
+- Before downloading the file, check the file size (if it is> 8MB)
+- If it is less than 8MB, download the file from the file path, otherwise abort
+- Call the function `send_file` to forward the file to the Discord channel
+
+**Author** - [officialbishowb](https://t.me/officialbishowb)
