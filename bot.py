@@ -1,86 +1,63 @@
-
-############################################# - [TELEGRAM BOT - PART] - #############################################
-
-import telebot
-import os
 from dotenv import load_dotenv
-import random, string
-import json
+import os
+import dotenv
 import time
-import requests
 from discord_webhook import DiscordWebhook
+import random
+import logging
+from aiogram import Bot, Dispatcher, executor, types
+import json
+import random, string
 load_dotenv()
 
-# Some declaration
-bot_token=os.getenv('telegram_bot_token') # your bot token
-verified_userid=os.getenv('user_with_access') # list of user id who can use the bot ([id1, id2, id3])
+############ General variables ############
+BOT_TOKEN=os.getenv("BOT_TOKEN") # Bot token
+ACCESS_IDS=os.getenv("USER_WITH_ACCESS").split(",") # List of userids with access to the bot
+ACCESS_IDS=[x for x in ACCESS_IDS if x!=""]
+WEBHOOK_URLS=os.getenv("WEBHOOK_URLS") # List of discord webhook urls to send messages to
+FILES_EXTENSIONS=["txt","zip","anom","loli","rar"]
+applieduser_filename="applieduser.json"
+############ Bot setup AIOGRAM ############
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+# Initialize bot and dispatcher
+bot = Bot(token=BOT_TOKEN, parse_mode=types.ParseMode.HTML)
+dp = Dispatcher(bot)
 
-## Bot initialization
-bot = telebot.TeleBot(bot_token, parse_mode="HTML")
-# Main message handler
-@bot.message_handler(commands=["start"])
-def start_cmd(message):
-    if str(message.from_user.id) in verified_userid:
-        bot.reply_to(message,f"Hello <b>@{message.from_user.username}</b>\nHow are you?\n\nJust forward your content here and I will try to forward it to Discord server channel.\nNote: I can forward only document,photo and video for now !!!")
+
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    """
+    This handler will be called when user sends `/start` or `/cmds` command
+    """
+    if str(message.from_user.id) in ACCESS_IDS:
+        await message.reply(f"<b>Hi @{message.from_user.username}</b>\nHow are you doing?\n\nJust send me a file and I will forward it to Discord :) .")
     else:
-        bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
+        await message.reply("You don't have access to this bot\n")
 
 
-
-@bot.message_handler(content_types=["document","photo","video"])
-def handle_all(message):
-    '''
-    Function to handle document, photo and video content
-    :param message: message object
-    '''
-    if str(message.from_user.id) in verified_userid:
-        content=message.content_type
-        fileId=getFileId(message,content)
-        fileSize=getFileSize(message,content)   
-        fileName=getFileName(message,content)
-        file_path=get_file_path(fileId)
-        if fileSize>=8000000:
-            bot.reply_to(message,"File size is too big. Aborted ❌")
-        else:
-            download_file(file_path,fileName)
-            time.sleep(2)
-            ## if the file end with "rar","zip","txt" then send to second webhook channel else to the first webhook(mostly memes or pictures) 
-            if fileName.split(".")[1] in ["rar","zip","txt"]:
-                sendFile_res=send_file_2(fileName)
+@dp.message_handler(content_types=['document','photo','video','audio','text'])
+async def handle_others(message: types.Message):
+    """
+    This handler will be called when user sends a file matching the content types specified
+    """
+    content_type=message.content_type
+    if content_type!="text":
+        fileid,filename=getFileId(message,content_type),getFileName(message,content_type)
+        file_object=await bot.get_file(file_id=fileid)
+        if(file_object.file_size<8000000):
+            await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
+            if filename.split(".")[-1] in FILES_EXTENSIONS:
+                await message.reply(sendFile_2(filename))
             else:
-                sendFile_res=send_file_1(fileName)
-
-            if sendFile_res:
-                bot.reply_to(message,"Done! Forwarded to Discord ✅")
-                del_file(fileName)
-            else:
-                  bot.reply_to(message,"Error! Not Forwarded to Discord ❌")
-    else:
-        bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
-
-@bot.message_handler(content_types=["text"])
-def handle_all(message):
-    if str(message.from_user.id) in verified_userid:
-        if send_text(message.text):
-            bot.reply_to(message,"Done! Text forwarded to Discord ✅")
+                await message.reply(sendFile_1(filename))
         else:
-            bot.reply_to(message,"Error! Text not forwarded to Discord ❌")
+            await message.reply("File size too big! Aborted.")
     else:
-        bot.reply_to(message,f"<b>Sorry you don't have access to his bot!</b>")
-
-
-
-
-
-def del_file(file):
-    '''
-    Delete a file  
-    :param file: file to delete
-    '''
-    if os.path.exists(file):
-        os.remove(file)
-
-
+         await message.reply(sendFile_2(filename))
+    delFile(filename) # Delete the file after sending it
+    
+######################## USEFUL FUNCTIONS #######################
 def getFileId(message,contenttype):
     '''
     Return a file id
@@ -92,21 +69,9 @@ def getFileId(message,contenttype):
     elif contenttype == "video":
         return message.video.file_id
     elif contenttype == "document":
-        return message.document.file_id
-
-
-def getFileSize(message,contenttype):
-    '''
-    Return a file size in kb
-    :param message: message object
-    :param contenttype: content type of a file 
-    '''
-    if contenttype == "photo":
-        return message.photo[len(message.photo)-1].file_size
-    elif contenttype == "video":
-        return message.video.file_size
-    elif contenttype == "document":
-        return message.document.file_size
+        return message.document.file_id 
+    elif contenttype == "audio":
+        return message.audio.file_id
 
 def getFileName(message,contenttype):
     '''
@@ -129,66 +94,61 @@ def getRandomWords():
     letters = string.ascii_lowercase+""+string.ascii_uppercase+""+string.digits
     return ''.join(random.choice(letters) for i in range(6))
 
+def delFile(filename):
+    """Delete a file
 
-def get_file_path(file_id):
-    '''
-    Get the file path of the document, video or photo send in the bot
-    :param file_id: file id from the sent document, video or photo
-    returns the file file path
-    '''
-    token = bot_token
-    base_url=f"https://api.telegram.org/bot{token}/getFile?file_id={file_id}"
-    req=requests.get(base_url).json()
-    return req["result"]["file_path"]
+    Args:
+        filename (string): The filename to delete
+    """
+    try:
+        os.remove(filename)
+    except:
+        pass
+##################### DISCORD BOT ##############################
 
-def download_file(file_path,filename):
-    '''
-    Download the file with the help of the filepath and write it as binary to download it
-    :param file_path: file path from the sent document, video or photo
-    :param filename: to name the downloaded file
-    '''
-    token = bot_token
-    base_url=f"https://api.telegram.org/file/bot{token}/{file_path}"
-    req=requests.get(base_url)    
-    with open(filename, 'wb') as f:
-        f.write(req.content)
+WEBHOOKS=os.getenv("WEBHOOK_URLS").split(",")
+WEBHOOKS=[x for x in WEBHOOKS if x!=""]
 
-
-
-############################################# - [DISCORD BOT (WEBHOOK) - PART] - #############################################
-
-
-webhook_url_1=os.getenv("webhook_url") #your channel webhook url
-webhook_url_2=os.getenv("webhook_url_2") #your channel webhook url
-
-# send the file to first webhook
-def send_file_1(filename):
-    webhook = DiscordWebhook(url=webhook_url_1, username="LearnIT Forward Bot")
+# send the file to first webhook - memes & co
+def sendFile_1(filename):
+    webhook = DiscordWebhook(url=WEBHOOKS[0], username="LearnIT Forward Bot")
     time.sleep(4)
     with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
     # send the webhook
-    response = webhook.execute(remove_embeds=True, remove_files=True)
-    return response.status_code==200
+    try:
+        response = webhook.execute(remove_embeds=True, remove_files=True)
+    except Exception as e:
+        return "Error: "+str(e)
+    if response.status_code==200:
+        return f"Successfully forwarded to Discord! [{response.status_code}] "
+    return f"Error while forwarding to Discord! - [{response.status_code}] "
 
-#send the text to second webhook
-def send_text(text):
-    webhook = DiscordWebhook(url=webhook_url_2, username="LearnIT Forward Bot", rate_limit_retry=True,
+#send the text to second webhook .txt file & co
+def sendText(text):
+    webhook = DiscordWebhook(url=WEBHOOKS[1], username="LearnIT Forward Bot", rate_limit_retry=True,
                             content=text)
-    response = webhook.execute()
-    return response.status_code==200
+    try:
+        response = webhook.execute()
+    except Exception as e:
+        return "Error: "+str(e)
+    if response.status_code==200:
+        return f"Successfully forwarded to Discord! - [{response.status_code}] "
+    return f"Error while forwarding to Discord! - [{response.status_code}] "
 
-# send the file to second webhook
-def send_file_2(filename):
-    webhook = DiscordWebhook(url=webhook_url_2, username="LearnIT Forward Bot")
+# send the file to second webhook text & co
+def sendFile_2(filename):
+    webhook = DiscordWebhook(url=WEBHOOKS[1], username="LearnIT Forward Bot")
     time.sleep(4)
     with open(filename, 'rb') as f:
         webhook.add_file(file=f.read(), filename=filename)
     # send the webhook
     response = webhook.execute(remove_embeds=True, remove_files=True)
-    return response.status_code==200
+    if response.status_code==200:
+        return f"Successfully forwarded to Discord! [{response.status_code}] "
+    return f"Error while forwarding to Discord! - [{response.status_code}] "
 
-bot.polling() # start the telegram bot
 
 
-
+if __name__ == '__main__':
+   executor.start_polling(dp, skip_updates=True)
