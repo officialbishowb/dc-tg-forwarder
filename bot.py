@@ -14,7 +14,8 @@ ACCESS_IDS=os.getenv("USER_WITH_ACCESS").split(",") # List of userids with acces
 ACCESS_IDS=[x for x in ACCESS_IDS if x!=""]
 WEBHOOK_URLS=os.getenv("WEBHOOK_URLS") # List of discord webhook urls to send messages to
 FILES_EXTENSIONS=["txt","zip","anom","loli","rar"]
-applieduser_filename="applieduser.json"
+applieduser_filename="applieduser.json"#
+
 ############ Bot setup AIOGRAM ############
 # Configure logging
 logging.basicConfig(level=logging.INFO)
