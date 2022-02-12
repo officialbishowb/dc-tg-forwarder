@@ -1,12 +1,10 @@
 from dotenv import load_dotenv
 import os
-import dotenv
 import time
 from discord_webhook import DiscordWebhook
 import random
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-import json
 import random, string
 load_dotenv()
 
