@@ -13,7 +13,7 @@ BOT_TOKEN=os.getenv("BOT_TOKEN") # Bot token
 ACCESS_IDS=os.getenv("USER_WITH_ACCESS").split(",") # List of userids with access to the bot
 ACCESS_IDS=[x for x in ACCESS_IDS if x!=""]
 WEBHOOK_URLS=os.getenv("WEBHOOK_URLS") # List of discord webhook urls to send messages to
-FILES_EXTENSIONS=["txt","zip","anom","loli","rar"]
+FILES_EXTENSIONS=["txt","zip","anom","loli","rar","svb"]
 applieduser_filename="applieduser.json"#
 
 ############ Bot setup AIOGRAM ############
