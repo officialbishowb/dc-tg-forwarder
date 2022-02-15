@@ -1,3 +1,4 @@
+from email import message
 from dotenv import load_dotenv
 import os
 import time
@@ -35,26 +36,31 @@ async def send_welcome(message: types.Message):
         await message.reply("You don't have access to this bot\n")
 
 
-@dp.message_handler(content_types=['document','photo','video','audio','text'])
+@dp.message_handler(content_types=['document','photo','video','audio'])
 async def handle_others(message: types.Message):
     """
     This handler will be called when user sends a file matching the content types specified
     """
     content_type=message.content_type
-    if content_type!="text":
-        fileid,filename=getFileId(message,content_type),getFileName(message,content_type)
-        file_object=await bot.get_file(file_id=fileid)
-        if(file_object.file_size<8000000):
-            await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
-            if filename.split(".")[-1] in FILES_EXTENSIONS:
-                await message.reply(sendFile_2(filename))
-            else:
-                await message.reply(sendFile_1(filename))
+    fileid,filename=getFileId(message,content_type),getFileName(message,content_type)
+    file_object=await bot.get_file(file_id=fileid)
+    if(file_object.file_size<8000000):
+        await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
+        if filename.split(".")[-1] in FILES_EXTENSIONS:
+            await message.reply(sendFile_2(filename))
         else:
-            await message.reply("File size too big! Aborted.")
+            await message.reply(sendFile_1(filename))
     else:
-         await message.reply(sendFile_2(filename))
+        await message.reply("File size too big! Aborted.")
     delFile(filename) # Delete the file after sending it
+    
+
+@dp.message_handler()
+async def msg_forwader(message: types.Message):
+    """
+    This handler will be called when user sends a message
+    """
+    await message.reply(sendText(message.text))
     
 ######################## USEFUL FUNCTIONS #######################
 def getFileId(message,contenttype):
