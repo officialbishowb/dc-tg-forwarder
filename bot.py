@@ -1,7 +1,3 @@
-from email import message
-import re
-from tkinter.tix import Tree
-from aiohttp import request
 from dotenv import load_dotenv
 import os
 import time
@@ -11,7 +7,6 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 import random, string
 import requests
-import json
 load_dotenv()
 
 ############ General variables ############
@@ -51,7 +46,6 @@ async def handle_others(message: types.Message):
     file_object=await bot.get_file(file_id=fileid)
 
     if(file_object.file_size<=80000000):
-        await message.reply("File size is big but trying to download it...")
         await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
         if filename.split(".")[-1] in FILES_EXTENSIONS:
             await message.reply(sendFile_2(filename))
@@ -60,6 +54,7 @@ async def handle_others(message: types.Message):
         delFile(filename) # Delete the file after sending it
 
     elif(file_object.file_size<=200000000):
+        await message.reply("File size is big but trying to upload to anonfiles and send it...")
         await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
         response=uploadAnonfiles(filename)
         if(type(response)==list): # If it is a list -> error
@@ -133,8 +128,8 @@ def delFile(filename):
 
 
 
-async def uploadAnonfiles(filename):
-    request=await requests.post(url="https://api.anonfiles.com/upload",files={"file":open(filename,"rb")}).json()
+def uploadAnonfiles(filename):
+    request=requests.post(url="https://api.anonfiles.com/upload",files={"file":open(filename,"rb")}).json()
     if(request["status"]==True):
         return request["data"]["file"]["url"]["full"]
     else:
