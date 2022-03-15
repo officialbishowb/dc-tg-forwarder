@@ -1,4 +1,7 @@
 from email import message
+import re
+from tkinter.tix import Tree
+from aiohttp import request
 from dotenv import load_dotenv
 import os
 import time
@@ -7,6 +10,8 @@ import random
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 import random, string
+import requests
+import json
 load_dotenv()
 
 ############ General variables ############
@@ -44,7 +49,8 @@ async def handle_others(message: types.Message):
     content_type=message.content_type
     fileid,filename=getFileId(message,content_type),getFileName(message,content_type)
     file_object=await bot.get_file(file_id=fileid)
-    if(file_object.file_size>8000000):
+
+    if(file_object.file_size<80000000):
         await message.reply("File size is big but trying to download it...")
         await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
         if filename.split(".")[-1] in FILES_EXTENSIONS:
@@ -52,6 +58,22 @@ async def handle_others(message: types.Message):
         else:
             await message.reply(sendFile_1(filename))
         delFile(filename) # Delete the file after sending it
+
+    elif(file_object.file_size<=200000000):
+        await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
+        response=uploadAnonfiles(filename)
+        if(type(response)==list): # If it is a list -> error
+            await message.reply(response[1])
+        else:
+            await message.reply(sendText(response))
+        delFile(filename) # Delete the file after sending it
+    
+    else:
+        message.reply("File size is too big... aborted!")
+
+
+
+        
     
 
 @dp.message_handler()
@@ -108,6 +130,19 @@ def delFile(filename):
         os.remove(filename)
     except:
         pass
+
+
+
+async def uploadAnonfiles(filename):
+    request=await requests.post(url="https://api.anonfiles.com/upload",files={"file":open(filename,"rb")}).json()
+    if(request["status"]==True):
+        return request["data"]["file"]["url"]["full"]
+    else:
+        return ["error",["error"]["message"]]
+
+    
+
+
 ##################### DISCORD BOT ##############################
 
 WEBHOOKS=os.getenv("WEBHOOK_URLS").split(",")
