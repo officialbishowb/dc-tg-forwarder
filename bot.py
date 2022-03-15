@@ -50,7 +50,7 @@ async def handle_others(message: types.Message):
     fileid,filename=getFileId(message,content_type),getFileName(message,content_type)
     file_object=await bot.get_file(file_id=fileid)
 
-    if(file_object.file_size<80000000):
+    if(file_object.file_size<=80000000):
         await message.reply("File size is big but trying to download it...")
         await bot.download_file(file_path=file_object.file_path,destination=f"./{filename}") # Download file
         if filename.split(".")[-1] in FILES_EXTENSIONS:
