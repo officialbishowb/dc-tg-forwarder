@@ -129,6 +129,16 @@ def delFile(filename):
 
 
 def uploadAnonfiles(filename):
+    """Upload a file to anonfiles and return the link or error
+
+    Return type is not ideal  as it returns two types of values
+
+    Args:
+        filename (string): filename to upload
+
+    Returns:
+        array/string: array if there is an error, string if there is no error
+    """
     request=requests.post(url="https://api.anonfiles.com/upload",files={"file":open(filename,"rb")}).json()
     if(request["status"]==True):
         return request["data"]["file"]["url"]["full"]
